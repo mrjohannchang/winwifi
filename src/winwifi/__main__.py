@@ -1,8 +1,10 @@
+import os
 import pkg_resources
 import plumbum.cli
 import sys
+from typing import List
 
-from .main import WinWiFi
+from .main import WiFiConstant, WiFiInterface, WinWiFi
 
 
 class Wifi(plumbum.cli.Application):
@@ -38,6 +40,19 @@ class WifiConnect(plumbum.cli.Application):
 
     def main(self, ssid: str, passwd: str = ''):
         WinWiFi.connect(ssid=ssid, passwd=passwd, remember=not self._one_shot)
+
+
+@Wifi.subcommand('connected')
+class WifiConnected(plumbum.cli.Application):
+    """Show the current connected Wi-Fi SSID"""
+
+    def main(self):
+        interface: WiFiInterface
+        interfaces: List[WiFiInterface] = [interface.ssid for interface in WinWiFi.get_interfaces()
+                                           if interface.state == WiFiConstant.STATE_CONNECTED]
+        if not interfaces:
+            return 1
+        return os.linesep.join(interfaces)
 
 
 @Wifi.subcommand('disconnect')

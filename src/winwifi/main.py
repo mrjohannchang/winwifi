@@ -5,7 +5,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 
 class WinWiFi:
@@ -65,26 +65,20 @@ class WinWiFi:
     @classmethod
     def scan(cls, refresh: bool = False, callback: Callable = lambda x: None) -> List['WiFiAp']:
         if refresh:
-            interface: str = cls.get_network_interface()
-            cls.disable_interface(interface)
-            cls.enable_interface(interface)
-        cp: subprocess.CompletedProcess = cls.netsh(['wlan', 'show', 'network', 'mode=bssid'])
+            interface: 'WiFiInterface'
+            for interface in cls.get_interfaces():
+                cls.disable_interface(interface.name)
+                cls.enable_interface(interface.name)
+            time.sleep(5)
+        cp: subprocess.CompletedProcess = cls.netsh(['wlan', 'show', 'networks', 'mode=bssid'])
         callback(cp.stdout)
         return list(map(WiFiAp.parse_netsh, [out for out in cp.stdout.split('\n\n') if out.startswith('SSID')]))
 
     @classmethod
-    def get_network_interface(cls) -> str:
-        cp: subprocess.CompletedProcess = cls.netsh(['wlan', 'show', 'network'])
-        interface: str = ''
-
-        line: str
-        for line in cp.stdout.splitlines():
-            if not line.startswith('Interface name'):
-                continue
-            interface = line.split(' : ', maxsplit=1)[1].strip()
-            break
-
-        return interface
+    def get_interfaces(cls) -> List['WiFiInterface']:
+        cp: subprocess.CompletedProcess = cls.netsh(['wlan', 'show', 'interfaces'])
+        return list(map(WiFiInterface.parse_netsh,
+                        [out for out in cp.stdout.split('\n\n') if out.startswith('    Name')]))
 
     @classmethod
     def disable_interface(cls, interface: str):
@@ -93,7 +87,6 @@ class WinWiFi:
     @classmethod
     def enable_interface(cls, interface: str):
         cls.netsh(['interface', 'set', 'interface', 'name={}'.format(interface), 'admin=enabled'], timeout=15)
-        time.sleep(5)
 
     @classmethod
     def connect(cls, ssid: str, passwd: str = '', remember: bool = True):
@@ -183,3 +176,58 @@ class WiFiAp:
     @property
     def raw_data(self) -> str:
         return self._raw_data
+
+
+class WiFiConstant:
+    STATE_CONNECTED = 'connected'
+    STATE_DISCONNECTED = 'disconnected'
+
+
+class WiFiInterface:
+    @classmethod
+    def parse_netsh(cls, raw_data: str) -> 'WiFiInterface':
+        name: str = ''
+        state: str = ''
+        ssid: str = ''
+
+        line: str
+        for line in raw_data.splitlines():
+            if ' : ' not in line:
+                continue
+            value: str = line.split(' : ', maxsplit=1)[1].strip()
+            if line.startswith('    Name'):
+                name = value
+            elif line.startswith('    State'):
+                state = value
+            elif line.startswith('    SSID'):
+                ssid = value
+
+        c: 'WiFiInterface' = cls(name=name, state=state)
+        c.ssid = ssid
+        return c
+
+    def __init__(
+            self,
+            name: str = '',
+            state: str = '',
+            ssid: Optional[str] = None,
+    ):
+        self._name: str = name
+        self._state: str = state
+        self._ssid: Optional[str] = ssid
+
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def state(self) -> str:
+        return self._state
+
+    @property
+    def ssid(self) -> Optional[str]:
+        return self._ssid
+
+    @ssid.setter
+    def ssid(self, value: str):
+        self._ssid = value
