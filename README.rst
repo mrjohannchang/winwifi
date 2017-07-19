@@ -1,7 +1,7 @@
-WinWiFi
+winwifi
 =======
 
-A Wi-Fi manager for Windows.
+A Wi-Fi CLI for Windows.
 
 Installation
 ------------
@@ -13,7 +13,7 @@ Installation
 Usage
 -----
 
-.. code:: txt
+::
 
     wifi 0.0.1
 
