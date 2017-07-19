@@ -15,7 +15,7 @@ Usage
 
 ::
 
-    wifi 0.0.4
+    wifi 0.0.5
 
     A Windows Wi-Fi CLI
 
@@ -29,12 +29,13 @@ Usage
 
     Subcommands:
         connect            Connect to a specific access point; see 'wifi connect --help' for more info
+        connected          Show the current connected Wi-Fi SSID; see 'wifi connected --help' for more info
         disconnect         Disconnect from a Wi-Fi access point; see 'wifi disconnect --help' for more info
         forget             Remove speicifc access points from the historical list; see 'wifi forget --help' for more info
         history            List the historical Wi-Fi access points; see 'wifi history --help' for more info
         scan               Scan and list nearby Wi-Fi access points; see 'wifi scan --help' for more info
 
-    wifi connect 0.0.4
+    wifi connect 0.0.5
 
     Connect to a specific access point
 
@@ -50,7 +51,20 @@ Usage
         --oneshot          Do not remember the connection
 
 
-    wifi disconnect 0.0.4
+    wifi connected 0.0.5
+
+    Show the current connected Wi-Fi SSID
+
+    Usage:
+        wifi connected [SWITCHES]
+
+    Hidden-switches
+        -h, --help         Prints this help message and quits
+        --help-all         Print help messages of all subcommands and quit
+        -v, --version      Prints the program's version and quits
+
+
+    wifi disconnect 0.0.5
 
     Disconnect from a Wi-Fi access point
 
@@ -63,7 +77,7 @@ Usage
         -v, --version      Prints the program's version and quits
 
 
-    wifi forget 0.0.4
+    wifi forget 0.0.5
 
     Remove speicifc access points from the historical list
 
@@ -76,7 +90,7 @@ Usage
         -v, --version      Prints the program's version and quits
 
 
-    wifi history 0.0.4
+    wifi history 0.0.5
 
     List the historical Wi-Fi access points
 
@@ -89,7 +103,7 @@ Usage
         -v, --version      Prints the program's version and quits
 
 
-    wifi scan 0.0.4
+    wifi scan 0.0.5
 
     Scan and list nearby Wi-Fi access points
 
