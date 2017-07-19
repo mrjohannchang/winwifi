@@ -8,7 +8,7 @@ import time
 from typing import Callable, List
 
 
-class WinWifi:
+class WinWiFi:
     @classmethod
     def get_profile_template(cls) -> str:
         return pkgutil.get_data(__package__, 'data/profile-template.xml').decode('utf-8')
