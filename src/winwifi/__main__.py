@@ -1,19 +1,21 @@
 import pkg_resources
 import plumbum.cli
 import sys
-from typing import Tuple
 
-from .main import WinWifi
+from .main import WinWiFi
 
 
 class Wifi(plumbum.cli.Application):
+    """A Windows Wi-Fi CLI"""
+
     PROGNAME: str = 'wifi'
     VERSION: str = pkg_resources.require('winwifi')[0].version
-    DESCRIPTION: str = 'A Windows Wi-Fi CLI'
 
 
 @Wifi.subcommand('scan')
 class WifiScan(plumbum.cli.Application):
+    """Scan and list nearby Wi-Fi access points"""
+
     _refresh: bool = False
 
     @plumbum.cli.switch(['--refresh'], help='Force to refresh the Wi-Fi AP list')
@@ -21,11 +23,13 @@ class WifiScan(plumbum.cli.Application):
         self._refresh = True
 
     def main(self):
-        WinWifi.scan(refresh=self._refresh, callback=lambda x: print(x))
+        WinWiFi.scan(refresh=self._refresh, callback=lambda x: print(x))
 
 
 @Wifi.subcommand('connect')
 class WifiConnect(plumbum.cli.Application):
+    """Connect to a specific access point"""
+
     _one_shot: bool = False
 
     @plumbum.cli.switch(['--oneshot'], help='Do not remember the connection')
@@ -33,25 +37,31 @@ class WifiConnect(plumbum.cli.Application):
         self._one_shot = True
 
     def main(self, ssid: str, passwd: str = ''):
-        WinWifi.connect(ssid=ssid, passwd=passwd, remember=not self._one_shot)
+        WinWiFi.connect(ssid=ssid, passwd=passwd, remember=not self._one_shot)
 
 
 @Wifi.subcommand('disconnect')
 class WifiDisconnect(plumbum.cli.Application):
+    """Disconnect from a Wi-Fi access point"""
+
     def main(self):
-        WinWifi.disconnect()
+        WinWiFi.disconnect()
 
 
 @Wifi.subcommand('history')
 class WifiHistory(plumbum.cli.Application):
+    """List the historical Wi-Fi access points"""
+
     def main(self):
-        WinWifi.get_profiles(callback=lambda x: print(x))
+        WinWiFi.get_profiles(callback=lambda x: print(x))
 
 
 @Wifi.subcommand('forget')
 class WifiForget(plumbum.cli.Application):
+    """Remove speicifc access points from the historical list"""
+
     def main(self, *ssids: str):
-        WinWifi.forget(*ssids)
+        WinWiFi.forget(*ssids)
 
 
 def main() -> int:
