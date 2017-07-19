@@ -15,7 +15,7 @@ Usage
 
 ::
 
-    wifi 0.0.1
+    wifi 0.0.4
 
     A Windows Wi-Fi CLI
 
@@ -28,13 +28,15 @@ Usage
         -v, --version      Prints the program's version and quits
 
     Subcommands:
-        connect            see 'wifi connect --help' for more info
-        disconnect         see 'wifi disconnect --help' for more info
-        forget             see 'wifi forget --help' for more info
-        history            see 'wifi history --help' for more info
-        scan               see 'wifi scan --help' for more info
+        connect            Connect to a specific access point; see 'wifi connect --help' for more info
+        disconnect         Disconnect from a Wi-Fi access point; see 'wifi disconnect --help' for more info
+        forget             Remove speicifc access points from the historical list; see 'wifi forget --help' for more info
+        history            List the historical Wi-Fi access points; see 'wifi history --help' for more info
+        scan               Scan and list nearby Wi-Fi access points; see 'wifi scan --help' for more info
 
-    wifi connect 0.0.1
+    wifi connect 0.0.4
+
+    Connect to a specific access point
 
     Usage:
         wifi connect [SWITCHES] ssid [passwd='']
@@ -48,7 +50,9 @@ Usage
         --oneshot          Do not remember the connection
 
 
-    wifi disconnect 0.0.1
+    wifi disconnect 0.0.4
+
+    Disconnect from a Wi-Fi access point
 
     Usage:
         wifi disconnect [SWITCHES]
@@ -59,7 +63,9 @@ Usage
         -v, --version      Prints the program's version and quits
 
 
-    wifi forget 0.0.1
+    wifi forget 0.0.4
+
+    Remove speicifc access points from the historical list
 
     Usage:
         wifi forget [SWITCHES] ssids...
@@ -70,7 +76,9 @@ Usage
         -v, --version      Prints the program's version and quits
 
 
-    wifi history 0.0.1
+    wifi history 0.0.4
+
+    List the historical Wi-Fi access points
 
     Usage:
         wifi history [SWITCHES]
@@ -81,7 +89,9 @@ Usage
         -v, --version      Prints the program's version and quits
 
 
-    wifi scan 0.0.1
+    wifi scan 0.0.4
+
+    Scan and list nearby Wi-Fi access points
 
     Usage:
         wifi scan [SWITCHES]
