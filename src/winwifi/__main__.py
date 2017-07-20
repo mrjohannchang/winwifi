@@ -52,7 +52,7 @@ class WifiConnected(plumbum.cli.Application):
                                            if interface.state == WiFiConstant.STATE_CONNECTED]
         if not interfaces:
             return 1
-        return os.linesep.join(interfaces)
+        print(os.linesep.join(interfaces))
 
 
 @Wifi.subcommand('disconnect')
