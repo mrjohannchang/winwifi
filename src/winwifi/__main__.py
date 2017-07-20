@@ -80,7 +80,7 @@ class WifiForget(plumbum.cli.Application):
 
 
 def main() -> int:
-    return Wifi.run()
+    return Wifi.run()[1]
 
 
 if __name__ == '__main__':
