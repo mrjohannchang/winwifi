@@ -11,7 +11,7 @@ from typing import Callable, List, Optional
 class WinWiFi:
     @classmethod
     def get_profile_template(cls) -> str:
-        return pkgutil.get_data(__package__, 'data/profile-template.xml').decode('utf-8')
+        return pkgutil.get_data(__package__, 'data/profile-template.xml').decode()
 
     @classmethod
     def netsh(cls, args: List[str], timeout: int = 3) -> subprocess.CompletedProcess:
@@ -56,7 +56,7 @@ class WinWiFi:
         path: str
         fd, path = tempfile.mkstemp()
 
-        os.write(fd, profile.encode('utf-8'))
+        os.write(fd, profile.encode())
         cls.netsh(['wlan', 'add', 'profile', 'filename={}'.format(path)])
 
         os.close(fd)
