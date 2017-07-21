@@ -80,6 +80,9 @@ class WifiForget(plumbum.cli.Application):
 
 
 def main() -> int:
+    if os.name == 'nt':
+        os.system('chcp 65001 >nul 2>&1')
+
     return Wifi.run()[1]
 
 
