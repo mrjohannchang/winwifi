@@ -48,8 +48,7 @@ class WifiConnected(plumbum.cli.Application):
 
     def main(self):
         interface: WiFiInterface
-        interfaces: List[WiFiInterface] = [interface.ssid for interface in WinWiFi.get_interfaces()
-                                           if interface.state == WiFiConstant.STATE_CONNECTED]
+        interfaces: List[str] = list(map(lambda i: i.ssid, WinWiFi.get_connected_interfaces()))
         if not interfaces:
             return 1
         print(os.linesep.join(interfaces))

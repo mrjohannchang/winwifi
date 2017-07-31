@@ -81,6 +81,10 @@ class WinWiFi:
                         [out for out in cp.stdout.split('\n\n') if out.startswith('    Name')]))
 
     @classmethod
+    def get_connected_interfaces(cls) -> List['WiFiInterface']:
+        return list(filter(lambda i: i.state == WiFiConstant.STATE_CONNECTED, cls.get_interfaces()))
+
+    @classmethod
     def disable_interface(cls, interface: str):
         cls.netsh(['interface', 'set', 'interface', 'name={}'.format(interface), 'admin=disabled'], timeout=15)
 
@@ -100,6 +104,13 @@ class WinWiFi:
                 cls.add_profile(cls.gen_profile(
                     ssid=ssid, auth=ap.auth, encrypt=ap.encrypt, passwd=passwd, remember=remember))
             cls.netsh(['wlan', 'connect', 'name={}'.format(ssid)])
+
+            for i in range(30):
+                if list(filter(lambda it: it.ssid == ssid, WinWiFi.get_connected_interfaces())):
+                    break
+                time.sleep(1)
+            else:
+                raise RuntimeError('Cannot connect the Wi-Fi AP')
 
     @classmethod
     def disconnect(cls):
