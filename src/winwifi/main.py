@@ -81,6 +81,10 @@ class WinWiFi:
                         [out for out in cp.stdout.split('\n\n') if out.startswith('    Name')]))
 
     @classmethod
+    def get_connected_interfaces(cls) -> List['WiFiInterface']:
+        return list(filter(lambda i: i.state == WiFiConstant.STATE_CONNECTED, cls.get_interfaces()))
+
+    @classmethod
     def disable_interface(cls, interface: str):
         cls.netsh(['interface', 'set', 'interface', 'name={}'.format(interface), 'admin=disabled'], timeout=15)
 
@@ -91,15 +95,26 @@ class WinWiFi:
     @classmethod
     def connect(cls, ssid: str, passwd: str = '', remember: bool = True):
         if not passwd:
-            if ssid not in cls.get_profiles():
+            for i in range(3):
                 aps: List['WiFiAp'] = cls.scan(refresh=True)
                 ap: 'WiFiAp'
-                if ssid not in [ap.ssid for ap in aps]:
-                    raise RuntimeError('Cannot find the Wi-Fi AP')
+                if ssid in [ap.ssid for ap in aps]:
+                    break
+            else:
+                raise RuntimeError('Cannot find the Wi-Fi AP')
+
+            if ssid not in cls.get_profiles():
                 ap = [ap for ap in aps if ap.ssid == ssid][0]
                 cls.add_profile(cls.gen_profile(
                     ssid=ssid, auth=ap.auth, encrypt=ap.encrypt, passwd=passwd, remember=remember))
             cls.netsh(['wlan', 'connect', 'name={}'.format(ssid)])
+
+            for i in range(30):
+                if list(filter(lambda it: it.ssid == ssid, WinWiFi.get_connected_interfaces())):
+                    break
+                time.sleep(1)
+            else:
+                raise RuntimeError('Cannot connect the Wi-Fi AP')
 
     @classmethod
     def disconnect(cls):
