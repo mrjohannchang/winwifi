@@ -95,11 +95,15 @@ class WinWiFi:
     @classmethod
     def connect(cls, ssid: str, passwd: str = '', remember: bool = True):
         if not passwd:
-            if ssid not in cls.get_profiles():
+            for i in range(3):
                 aps: List['WiFiAp'] = cls.scan(refresh=True)
                 ap: 'WiFiAp'
-                if ssid not in [ap.ssid for ap in aps]:
-                    raise RuntimeError('Cannot find the Wi-Fi AP')
+                if ssid in [ap.ssid for ap in aps]:
+                    break
+            else:
+                raise RuntimeError('Cannot find the Wi-Fi AP')
+
+            if ssid not in cls.get_profiles():
                 ap = [ap for ap in aps if ap.ssid == ssid][0]
                 cls.add_profile(cls.gen_profile(
                     ssid=ssid, auth=ap.auth, encrypt=ap.encrypt, passwd=passwd, remember=remember))
