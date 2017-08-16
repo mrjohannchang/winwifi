@@ -100,6 +100,7 @@ class WinWiFi:
                 ap: 'WiFiAp'
                 if ssid in [ap.ssid for ap in aps]:
                     break
+                time.sleep(5)
             else:
                 raise RuntimeError('Cannot find the Wi-Fi AP')
 
