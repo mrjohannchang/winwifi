@@ -47,8 +47,20 @@ class WifiConnected(plumbum.cli.Application):
     """Show the current connected Wi-Fi SSID"""
 
     def main(self):
-        interface: WiFiInterface
+        i: WiFiInterface
         interfaces: List[str] = list(map(lambda i: i.ssid, WinWiFi.get_connected_interfaces()))
+        if not interfaces:
+            return 1
+        print(os.linesep.join(interfaces))
+
+
+@Wifi.subcommand('connectedbssid')
+class WifiConnectedBssid(plumbum.cli.Application):
+    """Show the current connected Wi-Fi BSSID"""
+
+    def main(self):
+        i: WiFiInterface
+        interfaces: List[str] = list(map(lambda i: i.bssid, WinWiFi.get_connected_interfaces()))
         if not interfaces:
             return 1
         print(os.linesep.join(interfaces))
