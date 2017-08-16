@@ -96,7 +96,7 @@ class WinWiFi:
     def connect(cls, ssid: str, passwd: str = '', remember: bool = True):
         if not passwd:
             for i in range(3):
-                aps: List['WiFiAp'] = cls.scan(refresh=True)
+                aps: List['WiFiAp'] = cls.scan()
                 ap: 'WiFiAp'
                 if ssid in [ap.ssid for ap in aps]:
                     break
