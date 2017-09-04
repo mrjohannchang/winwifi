@@ -102,7 +102,7 @@ class WinWiFi:
                     break
                 time.sleep(5)
             else:
-                raise RuntimeError('Cannot find the Wi-Fi AP')
+                raise RuntimeError('Cannot find Wi-Fi AP')
 
             if ssid not in cls.get_profiles():
                 ap = [ap for ap in aps if ap.ssid == ssid][0]
@@ -115,7 +115,7 @@ class WinWiFi:
                     break
                 time.sleep(1)
             else:
-                raise RuntimeError('Cannot connect the Wi-Fi AP')
+                raise RuntimeError('Cannot connect to Wi-Fi AP')
 
     @classmethod
     def disconnect(cls):
