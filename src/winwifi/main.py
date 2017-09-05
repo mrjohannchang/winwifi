@@ -14,15 +14,15 @@ class WinWiFi:
         return pkgutil.get_data(__package__, 'data/profile-template.xml').decode()
 
     @classmethod
-    def netsh(cls, args: List[str], timeout: int = 3) -> subprocess.CompletedProcess:
+    def netsh(cls, args: List[str], timeout: int = 3, check: bool = True) -> subprocess.CompletedProcess:
         return subprocess.run(['netsh'] + args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                              timeout=timeout, check=True, encoding=sys.stdout.encoding)
+                              timeout=timeout, check=check, encoding=sys.stdout.encoding)
 
     @classmethod
     def get_profiles(cls, callback: Callable = lambda x: None) -> List[str]:
         profiles: List[str] = []
 
-        raw_data: str = cls.netsh(['wlan', 'show', 'profiles']).stdout
+        raw_data: str = cls.netsh(['wlan', 'show', 'profiles'], check=False).stdout
 
         line: str
         for line in raw_data.splitlines():
