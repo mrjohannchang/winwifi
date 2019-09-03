@@ -78,6 +78,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         'plumbum',
+        'comtypes',
     ],
 
     python_requires='>=3.6',
