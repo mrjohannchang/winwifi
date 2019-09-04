@@ -143,29 +143,21 @@ class WinWiFi:
         os.remove(path)
 
     @classmethod
-    def scan(cls, refresh: bool = False, callback: Callable = lambda x: None) -> List['WiFiAp']:
-        if refresh:
-            dll_interface = True
+    def scan(cls, callback: Callable = lambda x: None) -> List['WiFiAp']:
+        win_dll_wlan = WindllWlanApi()
+        if win_dll_wlan.wlan_open_handle() is not win_dll_wlan.SUCCESS:
+            raise RuntimeError('Wlan dll open handle failed !')
 
-            win_dll_wlan = WindllWlanApi()
-            if win_dll_wlan.wlan_open_handle() is not win_dll_wlan.SUCCESS:
-                dll_interface = False
+        if win_dll_wlan.wlan_enum_interfaces() is not win_dll_wlan.SUCCESS:
+            raise RuntimeError('Wlan dll enum interfaces failed !')
 
-            if win_dll_wlan.wlan_enum_interfaces() is not win_dll_wlan.SUCCESS:
-                dll_interface = False
+        wlan_interfaces = win_dll_wlan.get_interfaes()
+        if len(wlan_interfaces) == 0:
+            raise RuntimeError('Do not get any wlan interfaces !')
 
-            wlan_interfaces = win_dll_wlan.get_interfaes()
-            if len(wlan_interfaces) == 0:
-                dll_interface = False
+        win_dll_wlan.wlan_scan(byref(wlan_interfaces[0]['guid']))
+        time.sleep(5)
 
-            if dll_interface:
-                win_dll_wlan.wlan_scan(byref(wlan_interfaces[0]['guid']))
-            else:
-                interface: 'WiFiInterface'
-                for interface in cls.get_interfaces():
-                    cls.disable_interface(interface.name)
-                    cls.enable_interface(interface.name)
-            time.sleep(5)
         cp: subprocess.CompletedProcess = cls.netsh(['wlan', 'show', 'networks', 'mode=bssid'])
         callback(cp.stdout)
         return list(map(WiFiAp.parse_netsh, [out for out in cp.stdout.split('\n\n') if out.startswith('SSID')]))
