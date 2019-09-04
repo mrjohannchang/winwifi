@@ -18,14 +18,8 @@ class Wifi(plumbum.cli.Application):
 class WifiScan(plumbum.cli.Application):
     """Scan and list nearby Wi-Fi access points"""
 
-    _refresh: bool = False
-
-    @plumbum.cli.switch(['--refresh'], help='Force to refresh the Wi-Fi AP list')
-    def refresh(self):
-        self._refresh = True
-
     def main(self):
-        WinWiFi.scan(refresh=self._refresh, callback=lambda x: print(x))
+        WinWiFi.scan(callback=lambda x: print(x))
 
 
 @Wifi.subcommand('connect')
