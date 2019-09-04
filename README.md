@@ -1,4 +1,4 @@
-# winwifi
+# winwifi.py
 
 A Wi-Fi CLI tool for Windows.
 It allows you to scan Wi-Fi Access Points without being an admin to disable and enable the Wi-Fi interface.
