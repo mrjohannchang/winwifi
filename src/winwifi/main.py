@@ -132,6 +132,14 @@ class WinWiFi:
                 profile[profile.index('</sharedKey>')+len('</sharedKey>'):]
             profile = profile.replace('{auth}', 'open')
             profile = profile.replace('{encrypt}', 'none')
+        else:
+            profile = profile.replace('{passwd}', passwd)
+            if auth.upper() == 'WPA2-PERSONAL':
+                auth = 'WPA2PSK'
+            profile = profile.replace('{auth}', auth)
+            if encrypt.upper() == 'CCMP':
+                encrypt = 'AES'
+            profile = profile.replace('{encrypt}', encrypt)
 
         return profile
 
@@ -187,6 +195,7 @@ class WinWiFi:
 
     @classmethod
     def connect(cls, ssid: str, passwd: str = '', remember: bool = True):
+        # if not passwd:
         for i in range(3):
             aps: List['WiFiAp'] = cls.scan()
             ap: 'WiFiAp'
