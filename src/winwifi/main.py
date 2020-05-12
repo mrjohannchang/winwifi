@@ -124,6 +124,18 @@ class WinWiFi:
             -> str:
         profile: str = cls.get_profile_template()
 
+        # (invalid_char, replace_by)
+        invalid_chars = [
+            ('&', '&amp;'),  # Has to be checked first
+            ('"', '&quot;'),
+            ('\'', '&apos;'),
+            ('<', '&lt;'),
+            ('>', '&gt;')
+        ]
+        for invalid_char in invalid_chars:
+            if invalid_char[0] in ssid:
+                ssid = ssid.replace(invalid_char[0], invalid_char[1])
+
         profile = profile.replace('{ssid}', ssid)
         profile = profile.replace('{connmode}', 'auto' if remember else 'manual')
 
@@ -150,10 +162,11 @@ class WinWiFi:
         fd, path = tempfile.mkstemp()
 
         os.write(fd, profile.encode())
-        cls.netsh(['wlan', 'add', 'profile', 'filename={}'.format(path)])
-
-        os.close(fd)
-        os.remove(path)
+        try:
+            cls.netsh(['wlan', 'add', 'profile', 'filename={}'.format(path)])
+        finally:
+            os.close(fd)
+            os.remove(path)
 
     @classmethod
     def scan(cls, callback: Callable = lambda x: None) -> List['WiFiAp']:
