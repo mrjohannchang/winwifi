@@ -105,11 +105,16 @@ class WinWiFi:
 
         raw_data: str = cls.netsh(['wlan', 'show', 'profiles'], check=False).stdout
 
-        line: str
+        do_append = False
         for line in raw_data.splitlines():
-            if ' : ' not in line:
+            if not line:
+                do_append = False
                 continue
-            profiles.append(line.split(' : ', maxsplit=1)[1].strip())
+            if line == len(line) * '-':
+                do_append = True
+                continue
+            if do_append or ' : ' in line:
+                profiles.append(line.split(' : ', maxsplit=1)[-1].strip())
 
         callback(raw_data)
 
@@ -120,6 +125,18 @@ class WinWiFi:
             -> str:
         profile: str = cls.get_profile_template()
 
+        # (invalid_char, replace_by)
+        invalid_chars = [
+            ('&', '&amp;'),  # Has to be checked first
+            ('"', '&quot;'),
+            ('\'', '&apos;'),
+            ('<', '&lt;'),
+            ('>', '&gt;')
+        ]
+        for invalid_char in invalid_chars:
+            if invalid_char[0] in ssid:
+                ssid = ssid.replace(invalid_char[0], invalid_char[1])
+
         profile = profile.replace('{ssid}', ssid)
         profile = profile.replace('{connmode}', 'auto' if remember else 'manual')
 
@@ -128,6 +145,14 @@ class WinWiFi:
                 profile[profile.index('</sharedKey>')+len('</sharedKey>'):]
             profile = profile.replace('{auth}', 'open')
             profile = profile.replace('{encrypt}', 'none')
+        else:
+            profile = profile.replace('{passwd}', passwd)
+            if auth.upper() == 'WPA2-PERSONAL':
+                auth = 'WPA2PSK'
+            profile = profile.replace('{auth}', auth)
+            if encrypt.upper() == 'CCMP':
+                encrypt = 'AES'
+            profile = profile.replace('{encrypt}', encrypt)
 
         return profile
 
@@ -138,10 +163,11 @@ class WinWiFi:
         fd, path = tempfile.mkstemp()
 
         os.write(fd, profile.encode())
-        cls.netsh(['wlan', 'add', 'profile', 'filename={}'.format(path)])
-
-        os.close(fd)
-        os.remove(path)
+        try:
+            cls.netsh(['wlan', 'add', 'profile', 'filename={}'.format(path)])
+        finally:
+            os.close(fd)
+            os.remove(path)
 
     @classmethod
     def scan(cls, callback: Callable = lambda x: None) -> List['WiFiAp']:
@@ -183,28 +209,28 @@ class WinWiFi:
 
     @classmethod
     def connect(cls, ssid: str, passwd: str = '', remember: bool = True):
-        if not passwd:
-            for i in range(3):
-                aps: List['WiFiAp'] = cls.scan()
-                ap: 'WiFiAp'
-                if ssid in [ap.ssid for ap in aps]:
-                    break
-                time.sleep(5)
-            else:
-                raise RuntimeError('Cannot find Wi-Fi AP')
+        # if not passwd:
+        for i in range(3):
+            aps: List['WiFiAp'] = cls.scan()
+            ap: 'WiFiAp'
+            if ssid in [ap.ssid for ap in aps]:
+                break
+            time.sleep(5)
+        else:
+            raise RuntimeError('Cannot find Wi-Fi AP')
 
-            if ssid not in cls.get_profiles():
-                ap = [ap for ap in aps if ap.ssid == ssid][0]
-                cls.add_profile(cls.gen_profile(
-                    ssid=ssid, auth=ap.auth, encrypt=ap.encrypt, passwd=passwd, remember=remember))
-            cls.netsh(['wlan', 'connect', 'name={}'.format(ssid)])
+        if ssid not in cls.get_profiles():
+            ap = [ap for ap in aps if ap.ssid == ssid][0]
+            cls.add_profile(cls.gen_profile(
+                ssid=ssid, auth=ap.auth, encrypt=ap.encrypt, passwd=passwd, remember=remember))
+        cls.netsh(['wlan', 'connect', 'name={}'.format(ssid)])
 
-            for i in range(30):
-                if list(filter(lambda it: it.ssid == ssid, WinWiFi.get_connected_interfaces())):
-                    break
-                time.sleep(1)
-            else:
-                raise RuntimeError('Cannot connect to Wi-Fi AP')
+        for i in range(30):
+            if list(filter(lambda it: it.ssid == ssid, WinWiFi.get_connected_interfaces())):
+                break
+            time.sleep(1)
+        else:
+            raise RuntimeError('Cannot connect to Wi-Fi AP')
 
     @classmethod
     def disconnect(cls):
