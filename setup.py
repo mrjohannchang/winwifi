@@ -23,17 +23,17 @@ setuptools.setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='1.0.3',
+    version='1.0.4',
 
-    description='A Windows Wi-Fi CLI',
+    description='A Windows Wi-Fi CLI utility',
     long_description=long_description,
     long_description_content_type='text/markdown',
 
     # The project's main homepage.
-    url='https://github.com/changyuheng/winwifi.py',
+    url='https://github.com/changyuheng/winwifi',
 
     # Author details
-    author='Henry Chang',
+    author='Johann Chang',
     author_email='mr.changyuheng@gmail.com',
 
     # Choose your license
