@@ -97,7 +97,7 @@ class WinWiFi:
     def netsh(cls, args: List[str], timeout: int = 3, check: bool = True) -> subprocess.CompletedProcess:
         return subprocess.run(
                 ['netsh'] + args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                timeout=timeout, check=check, encoding=sys.stdout.encoding)
+                timeout=timeout, check=check, encoding="UTF-8", shell = True)
 
     @classmethod
     def get_profiles(cls, callback: Callable = lambda x: None) -> List[str]:
