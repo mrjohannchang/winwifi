@@ -1,4 +1,4 @@
-# winwifi (modified)
+# winwifi
 
 A Wi-Fi CLI tool for Windows.
 It allows you to scan Wi-Fi Access Points without being an admin to disable and enable the Wi-Fi interface.
@@ -8,7 +8,7 @@ Check [pipx](https://github.com/pypa/pipx) for installing as a standalone execut
 ## Installation
 
 ```
-pip install git+https://github.com/SpaceMonkeyAlfa/winwifi
+pip install winwifi
 ```
 
 ## Usage
