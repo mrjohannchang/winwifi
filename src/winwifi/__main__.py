@@ -3,6 +3,7 @@ import pkg_resources
 import plumbum.cli
 import sys
 from typing import List
+from ctypes import windll
 
 from .main import WiFiConstant, WiFiInterface, WinWiFi
 
@@ -87,10 +88,13 @@ class WifiForget(plumbum.cli.Application):
 def main() -> int:
     if os.name == 'nt':
         os.system('chcp 65001 >nul 2>&1')
-    if sys.stdout.encoding != 'utf8':
-        sys.stdout.reconfigure(encoding='utf8')
-    if sys.stderr.encoding != 'utf8':
-        sys.stderr.reconfigure(encoding='utf8')
+        
+    system_encoding = str(windll.kernel32.GetConsoleOutputCP())
+        
+    if sys.stdout.encoding != system_encoding:
+        sys.stdout.reconfigure(encoding=system_encoding)
+    if sys.stderr.encoding != system_encoding:
+        sys.stderr.reconfigure(encoding=system_encoding)
 
     return Wifi.run()[1]
 
