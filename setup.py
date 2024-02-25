@@ -80,6 +80,7 @@ setuptools.setup(
     install_requires=[
         'comtypes',
         'plumbum',
+        'psutils'
     ],
 
     python_requires='>=3.6',

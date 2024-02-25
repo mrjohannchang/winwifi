@@ -6,12 +6,14 @@ import sys
 import tempfile
 import time
 from typing import Callable, List, Optional
+import psutil
 
 from ctypes import *
 from ctypes.wintypes import *
 from comtypes import GUID
 
-
+wlanapi = windll.wlanapi
+openHandle = None
 class WLAN_RAW_DATA(Structure):
     _fields_ = [
         ("dwDataSize", DWORD),
@@ -55,12 +57,23 @@ class WindllWlanApi:
         return func
 
     def wlan_open_handle(self, client_version=2):
+        global openHandle
         f = self.wlan_func_generator(self.native_wifi.WlanOpenHandle,
                                      [DWORD, c_void_p, POINTER(DWORD), POINTER(HANDLE)],
                                      [DWORD])
 
         return f(client_version, None, byref(self._nego_version), byref(self._handle))
+        openHandle = self._handle
+    def wlan_close_handle(self):
+        f = self.wlan_func_generator(self.native_wifi.WlanCloseHandle,
+                                     [HANDLE, c_void_p],
+                                     [DWORD])
 
+        result = f(self._handle, None)
+
+        print("WlanCloseHandle result:", result)  # Print the result here
+
+        return result
     def wlan_enum_interfaces(self):
         f = self.wlan_func_generator(self.native_wifi.WlanEnumInterfaces,
                                      [HANDLE, c_void_p, POINTER(POINTER(WLAN_INTERFACE_INFO_LIST))],
@@ -87,7 +100,8 @@ class WindllWlanApi:
 
         return interfaces
 
-
+    def is_handle_closed(self):
+        return self._handle is None
 class WinWiFi:
     @classmethod
     def get_profile_template(cls) -> str:
@@ -97,13 +111,13 @@ class WinWiFi:
     def netsh(cls, args: List[str], timeout: int = 3, check: bool = True) -> subprocess.CompletedProcess:
         return subprocess.run(
                 ['netsh'] + args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                timeout=timeout, check=check, encoding=sys.stdout.encoding)
+                timeout=timeout, check=check, encoding="cp437", shell=True)
 
     @classmethod
     def get_profiles(cls, callback: Callable = lambda x: None) -> List[str]:
         profiles: List[str] = []
 
-        raw_data: str = cls.netsh(['wlan', 'show', 'profiles'], check=False).stdout
+        raw_data: str = cls.netsh(['wlan', 'show', 'profiles'], check=False).stdout.decode('cp437', errors='ignore')
 
         line: str
         for line in raw_data.splitlines():
@@ -146,23 +160,43 @@ class WinWiFi:
     @classmethod
     def scan(cls, callback: Callable = lambda x: None) -> List['WiFiAp']:
         win_dll_wlan = WindllWlanApi()
+        
         if win_dll_wlan.wlan_open_handle() is not win_dll_wlan.SUCCESS:
             raise RuntimeError('Wlan dll open handle failed !')
 
-        if win_dll_wlan.wlan_enum_interfaces() is not win_dll_wlan.SUCCESS:
-            raise RuntimeError('Wlan dll enum interfaces failed !')
+        process = psutil.Process(os.getpid())
 
-        wlan_interfaces = win_dll_wlan.get_interfaes()
-        if len(wlan_interfaces) == 0:
-            raise RuntimeError('Do not get any wlan interfaces !')
+        # Track the initial resource usage before starting the scan
+        initial_resources = process.as_dict(attrs=['num_handles', 'memory_info'])
 
-        win_dll_wlan.wlan_scan(byref(wlan_interfaces[0]['guid']))
-        time.sleep(5)
+        try:
+            if win_dll_wlan.wlan_enum_interfaces() is not win_dll_wlan.SUCCESS:
+                raise RuntimeError('Wlan dll enum interfaces failed !')
 
-        cp: subprocess.CompletedProcess = cls.netsh(['wlan', 'show', 'networks', 'mode=bssid'])
-        callback(cp.stdout)
-        return list(map(WiFiAp.parse_netsh, [out for out in cp.stdout.split('\n\n') if out.startswith('SSID')]))
+            wlan_interfaces = win_dll_wlan.get_interfaes()
+            if len(wlan_interfaces) == 0:
+                raise RuntimeError('Do not get any wlan interfaces !')
 
+            win_dll_wlan.wlan_scan(byref(wlan_interfaces[0]['guid']))
+            time.sleep(5)
+
+            cp: subprocess.CompletedProcess = cls.netsh(['wlan', 'show', 'networks', 'mode=bssid'])
+            callback(cp.stdout)
+            return list(map(WiFiAp.parse_netsh, [out for out in cp.stdout.split('\n\n') if out.startswith('SSID')]))
+
+        finally:
+            # Track the resource usage after the scan is complete
+            final_resources = process.as_dict(attrs=['num_handles', 'memory_info'])
+
+            # Calculate and print resource usage difference
+            handles_diff = final_resources['num_handles'] - initial_resources['num_handles']
+            memory_diff = final_resources['memory_info'].rss - initial_resources['memory_info'].rss
+            close_result = win_dll_wlan.wlan_close_handle()
+            if close_result != win_dll_wlan.SUCCESS:
+                raise RuntimeError("uh oh")
+            
+            print(f"Handles used during scan: {handles_diff}")
+            print(f"Memory consumed during scan (bytes): {memory_diff}")
     @classmethod
     def get_interfaces(cls) -> List['WiFiInterface']:
         cp: subprocess.CompletedProcess = cls.netsh(['wlan', 'show', 'interfaces'])
